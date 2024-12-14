@@ -1,12 +1,12 @@
-// src/App.jsx
 import React from 'react';
+import FileUploader from './FIleupload'; // 导入 FileUploader 组件
 
-const App = () => {
+function App() {
   return (
-    <div>
-      <h1>Hello, Vite + React!Learn is endless</h1>
+    <div className="App">
+      <FileUploader />
     </div>
   );
-};
+}
 
 export default App;
