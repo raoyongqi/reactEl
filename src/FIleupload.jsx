@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 
 function FileUploader() {
   const [notes, setNotes] = useState([]);
-  const [searchValue, setSearchValue] = useState('');
+  const [isClearing, setIsClearing] = useState(false); // 控制清除的状态
+  const [intervalId, setIntervalId] = useState(null); // 存储 setInterval 的 ID，以便停止
 
   // 加载笔记数据
   useEffect(() => {
-    // 获取笔记文件
-    console.log('完蛋了')
     window.electron.readNotes().then((data) => setNotes(data));
   }, []);
 
   // 保存笔记数据
   useEffect(() => {
     if (notes.length > 0) {
-      // 写入笔记文件
       window.electron.writeNotes(notes);
     }
   }, [notes]);
@@ -53,39 +51,44 @@ function FileUploader() {
     reader.readAsText(file);
   };
 
-  // 处理搜索和清除功能
-  const handleSearchAndRemove = () => {
-    if (!searchValue) {
-      alert('请输入关键词！');
+  // 处理清除功能
+  const handleClearNotes = () => {
+    // 如果正在清除，则停止清除
+    if (isClearing) {
+      clearInterval(intervalId); // 停止定时器
+      setIsClearing(false); // 设置状态为停止清除
       return;
     }
 
-    const filteredNotes = notes.filter(
-      (note) => !note.toLowerCase().includes(searchValue.toLowerCase())
-    );
+    // 启动清除过程
+    setIsClearing(true);
+    let currentIndex = 0;
 
-    if (filteredNotes.length !== notes.length) {
-      alert(`成功清除包含关键词：${searchValue} 的记录`);
-    } else {
-      alert('未找到匹配记录！');
-    }
+    const id = setInterval(() => {
+      if (currentIndex < notes.length) {
+        currentIndex++;
+        setNotes((prevNotes) => prevNotes.filter((_, i) => i !== currentIndex - 1)); // 移除当前记录
+      } else {
+        clearInterval(id); // 清除定时器
+        setIsClearing(false);
+      }
+    }, 2000); // 每隔2秒清除一个记录
 
-    setNotes(filteredNotes); // 更新笔记
+    setIntervalId(id); // 保存定时器ID
   };
 
   return (
     <div>
       <input type="file" id="fileInput" accept=".txt" onChange={handleFileUpload} />
-      <input
-        type="text"
-        id="searchInput"
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-        placeholder="请输入要查找的关键词"
-      />
-      <button id="searchAndRemove" onClick={handleSearchAndRemove}>
-        查找并清除
+      <button id="searchAndRemove" onClick={handleClearNotes}>
+        {isClearing ? '停止清除' : '开始清除'}
       </button>
+
+      {/* 显示总记录数 */}
+      <div>
+        <strong>总记录数：{notes.length}</strong>
+      </div>
+
       <ul id="noteList">
         {notes.length === 0 ? (
           <li>暂无记录</li>
