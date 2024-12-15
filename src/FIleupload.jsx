@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function FileUploader() {
-  const [notes, setNotes] = useState([]); // 存储笔记
-  const [searchValue, setSearchValue] = useState(''); // 存储搜索关键词
+  const [notes, setNotes] = useState([]);
+  const [searchValue, setSearchValue] = useState('');
+
+  // 加载笔记数据
+  useEffect(() => {
+    // 获取笔记文件
+    console.log('完蛋了')
+    window.electron.readNotes().then((data) => setNotes(data));
+  }, []);
+
+  // 保存笔记数据
+  useEffect(() => {
+    if (notes.length > 0) {
+      // 写入笔记文件
+      window.electron.writeNotes(notes);
+    }
+  }, [notes]);
 
   // 处理文件上传
   const handleFileUpload = (event) => {
